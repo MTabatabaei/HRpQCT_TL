@@ -69,6 +69,8 @@ for i in all_files:
         input_files.append(i)
 
 # Replace the / with \\ so that python can read the file path
+# you don't really have to use string replacements if you use raw strings eg:
+# arbitrary_path = r"Home://arbitrary_path/path"
 for i in range(len(input_files)):
     input_files[i] = dirname + "?" + input_files[i]
     # input_files[i] = dirname + "*\*\*" + input_files[i]
@@ -79,6 +81,7 @@ for i in range(len(input_files)):
     del tmp1, tmp2
     
 # Check the number of inputs files and find how many scans are being registered...
+#what if just one time point is missing, is the whole scan omitted?
     # Each scan has 4 files
 if len(input_files)%4 == 0:
     n = int(len(input_files)/4)
@@ -108,6 +111,7 @@ print("Input files are from: " + dirname)
 cn = 0
 for i in range(1,int(n+1)):      
 # Initialize names to be iterated as needed
+# name space here is super confusing, I would suggest for later an easier naming of variables
     init_namegs = "aim_gray{}"
     nm_strgs = init_namegs.format(i)
     vars()[nm_strgs] = input_files[cn+3]
@@ -149,7 +153,7 @@ elif (gen == 2) and (Site == "Tibia"):
 
 # Assign variable names using formatted strings to be scalable
 for i in range(2,int(n+1)):
-
+# same here, namespace is very confusing and not easy to follow
     init_nameov = "overlay1{}"
     nameov = init_nameov.format(i)
     init_namefd = "formed_denoised1{}"
@@ -237,6 +241,9 @@ for i in range(2,int(n+1)):
     surf_seg2 = - seg2_erod + vars()[names2]
     
     # Find the intersect between dilated formed/resorbed surfaces and surface of seg1 and seg2
+    # it might be faster to run a boolean comparison like:
+    # a = np.logical_and(b.astype('bool'),c.astype('bool'))
+    # this reshape b and c into logical arrays and then compares
     form_intersect = surf_form * surf_seg1
     resorb_intersect = surf_resorb * surf_seg2
         
@@ -249,6 +256,10 @@ for i in range(2,int(n+1)):
     
     #%% MATLAB method for calculations
     # First, create the union of constant, formed, and resorbed bones
+    # if you define formed bone as the difference in grey value as you showed once, you have to be careful here to use an addition!
+    # this will most likely create a non-binary array (values of 2 in some cases), I am not sure whether binary operations include a
+    # data type conversion beforehand or treat every value >0 as True.
+    # you could get around that with a boolean OR operation
     cortical_both = np.add(vars()[names1],vars()[namefd])
     
     Image_surf_labels = np.zeros_like(cortical_both)
@@ -266,7 +277,7 @@ for i in range(2,int(n+1)):
         
     Image_surf_labels = cortical_both - Image_without_surface
     Image_labels = Image_without_surface - Image_labels
-    
+    # same as above, boolean operation might be faster
     constant_bone_volume = Image_without_surface*constant_bone
     
     Image_surf_constant = np.zeros_like(constant_bone_volume)
